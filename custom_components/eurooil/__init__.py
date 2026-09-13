@@ -24,13 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-def _get_update_interval(value: int | str | None) -> timedelta:
-    """Return a validated update interval in hours."""
+def _get_update_interval(value: int | str | None) -> timedelta | None:
+    """Return a validated update interval in hours, or None for manual updates."""
     try:
         hours = int(value)
     except (TypeError, ValueError):
         hours = DEFAULT_UPDATE_INTERVAL
-    return timedelta(hours=max(MIN_UPDATE_INTERVAL, min(MAX_UPDATE_INTERVAL, hours)))
+    if hours <= 0:
+        return None
+    return timedelta(hours=min(MAX_UPDATE_INTERVAL, hours))
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:

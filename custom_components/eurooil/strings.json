@@ -21,7 +21,7 @@
       "init": {
         "title": "Interval aktualizace",
         "data": {
-          "update_interval": "Aktualizovat po kolika hodinách"
+          "update_interval": "Aktualizovat po kolika hodinách (0 = pouze ručně)"
         }
       }
     }

@@ -26,7 +26,7 @@ class EuroOilCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: ConfigEntry,
         api: EuroOilApi,
-        update_interval: timedelta,
+        update_interval: timedelta | None,
     ) -> None:
         super().__init__(
             hass,

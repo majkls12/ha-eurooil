@@ -12,7 +12,7 @@ Vlastní integrace pro veřejná data aplikace EuroOil Srdcovka. Vytvoří jedno
 
 ## Aktualizace dat
 
-Po prvním načtení při spuštění integrace se data obnovují opakovaně po nastaveném počtu hodin. Interval lze změnit v **Nastavení → Zařízení a služby → EuroOil / RoBiN OIL → Konfigurovat**.
+Po prvním načtení při spuštění integrace se data obnovují opakovaně po nastaveném počtu hodin. Interval lze změnit v **Nastavení → Zařízení a služby → EuroOil / RoBiN OIL → Konfigurovat**. Hodnota `0` vypne automatické obnovování; data pak zůstanou jen na ruční aktualizaci.
 
 Pro ruční aktualizaci lze v automatizaci nebo skriptu použít akci `homeassistant.update_entity` a vybrat entitu **Poslední aktualizace dat** vybrané stanice. Tím se společně načtou ceny, kvalita paliv i údaje o posledním závozu.
 

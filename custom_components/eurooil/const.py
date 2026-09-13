@@ -12,7 +12,7 @@ CONF_ROBIN_OIL = "robin_oil"
 CONF_UPDATE_INTERVAL = "update_interval"
 
 DEFAULT_UPDATE_INTERVAL = 12
-MIN_UPDATE_INTERVAL = 1
+MIN_UPDATE_INTERVAL = 0
 MAX_UPDATE_INTERVAL = 168
 
 BASE_URL = "https://srdcovka.eurooil.cz/api/verejne"
