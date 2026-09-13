@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vyberte čerpací stanici",
+        "data": {
+          "station_id": "Čerpací stanice"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Tato čerpací stanice již je přidána.",
+      "cannot_connect": "K veřejnému API Srdcovky se nelze připojit."
+    },
+    "error": {
+      "invalid_station": "Vyberte platnou čerpací stanici."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Nastavení aktualizace",
+        "data": {
+          "update_time": "Čas denní aktualizace (HH:MM)"
+        }
+      }
+    },
+    "error": {
+      "invalid_time": "Zadejte čas ve formátu HH:MM, například 06:00."
+    }
+  }
+}

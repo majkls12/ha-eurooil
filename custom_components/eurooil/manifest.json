@@ -1,0 +1,11 @@
+{
+  "domain": "eurooil",
+  "name": "EuroOil / RoBiN OIL",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://srdcovka.eurooil.cz/",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://srdcovka.eurooil.cz/",
+  "requirements": [],
+  "version": "1.0.0"
+}
