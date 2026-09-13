@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import EuroOilApi, EuroOilApiError
 from .const import CONF_STATION_ADDRESS, CONF_STATION_ID, CONF_STATION_NAME, DOMAIN
@@ -42,7 +43,9 @@ class EuroOilCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            return await self.api.async_get_station_data(self.station_id)
+            data = await self.api.async_get_station_data(self.station_id)
+            data["last_update"] = dt_util.utcnow()
+            return data
         except EuroOilApiError as err:
             raise UpdateFailed(str(err)) from err
 

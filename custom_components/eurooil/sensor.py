@@ -74,7 +74,7 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         if not super().available or self.coordinator.data is None:
             return False
         if self.entity_description.value_kind == "last_update":
-            return self.coordinator.last_update_success_time is not None
+            return self.coordinator.data.get("last_update") is not None
         source = "prices" if self.entity_description.value_kind == "price" else "quality"
         return self.entity_description.ean in self.coordinator.data[source]
 
@@ -86,7 +86,7 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         ean = self.entity_description.ean
         kind = self.entity_description.value_kind
         if kind == "last_update":
-            return self.coordinator.last_update_success_time
+            return self.coordinator.data.get("last_update")
         if kind == "price":
             return self.coordinator.data["prices"][ean].get("prodejniCena")
         if kind == "delivery":
