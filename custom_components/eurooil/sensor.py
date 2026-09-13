@@ -32,8 +32,8 @@ SENSORS: tuple[EuroOilSensorDescription, ...] = (
     EuroOilSensorDescription(key="diesel_price", name="Diesel bez biosložky cena", icon="mdi:gas-station", ean="1", value_kind="price", native_unit_of_measurement="Kč/l"),
     EuroOilSensorDescription(key="diesel_plus_price", name="Diesel bez biosložky Plus cena", icon="mdi:gas-station", ean="9", value_kind="price", native_unit_of_measurement="Kč/l"),
     EuroOilSensorDescription(key="lpg_price", name="LPG cena", icon="mdi:gas-station", ean="8", value_kind="price", native_unit_of_measurement="Kč/l"),
-    EuroOilSensorDescription(key="natural_95_bioethanol", name="Natural 95 bioetanol", icon="mdi:leaf", ean="4", value_kind="bio", native_unit_of_measurement="%"),
-    EuroOilSensorDescription(key="super_98_bioethanol", name="Super 98 bioetanol", icon="mdi:leaf", ean="5", value_kind="bio", native_unit_of_measurement="%"),
+    EuroOilSensorDescription(key="natural_95_bioethanol", name="Natural 95 obsah biolihu", icon="mdi:leaf", ean="4", value_kind="bio", native_unit_of_measurement="%"),
+    EuroOilSensorDescription(key="super_98_bioethanol", name="Super 98 obsah biolihu", icon="mdi:leaf", ean="5", value_kind="bio", native_unit_of_measurement="%"),
     EuroOilSensorDescription(key="natural_95_delivery", name="Natural 95 poslední závoz", icon="mdi:truck-delivery", ean="4", value_kind="delivery", device_class=SensorDeviceClass.TIMESTAMP),
     EuroOilSensorDescription(key="super_98_delivery", name="Super 98 poslední závoz", icon="mdi:truck-delivery", ean="5", value_kind="delivery", device_class=SensorDeviceClass.TIMESTAMP),
     EuroOilSensorDescription(key="diesel_delivery", name="Diesel bez biosložky poslední závoz", icon="mdi:truck-delivery", ean="1", value_kind="delivery", device_class=SensorDeviceClass.TIMESTAMP),
@@ -88,7 +88,8 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
             return dt_util.parse_datetime(self.coordinator.data["quality"][ean].get("datumZavozu"))
 
         quality = self.coordinator.data["quality"][ean]
-        code = f"{ean}-2"
+        # The quality API groups every gasoline grade under code 4, including EAN 5.
+        code = "4-2" if ean in {"4", "5"} else "1-2"
         value = next(
             (item.get("hodnota") for item in quality.get("hodnoty", []) if item.get("kod") == code),
             None,
