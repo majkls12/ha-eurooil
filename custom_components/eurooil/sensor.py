@@ -64,6 +64,8 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
+        if description.value_kind == "price":
+            self._attr_suggested_display_precision = 2
 
     @property
     def available(self) -> bool:
