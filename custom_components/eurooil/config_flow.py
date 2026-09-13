@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -10,7 +9,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import SelectOptionDict, SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
 from .api import EuroOilApi, EuroOilApiError
 from .const import (
@@ -18,9 +24,11 @@ from .const import (
     CONF_STATION_ADDRESS,
     CONF_STATION_ID,
     CONF_STATION_NAME,
-    CONF_UPDATE_TIME,
-    DEFAULT_UPDATE_TIME,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +80,7 @@ class EuroOilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                         CONF_ROBIN_OIL: station.get("robinOil", False),
                     },
-                    options={CONF_UPDATE_TIME: DEFAULT_UPDATE_TIME},
+                    options={CONF_UPDATE_INTERVAL: DEFAULT_UPDATE_INTERVAL},
                 )
 
         options = [
@@ -104,21 +112,23 @@ class EuroOilOptionsFlow(config_entries.OptionsFlow):
     ) -> config_entries.ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                datetime.strptime(user_input[CONF_UPDATE_TIME], "%H:%M")
-            except ValueError:
-                errors[CONF_UPDATE_TIME] = "invalid_time"
-            else:
-                return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_UPDATE_TIME,
+                    CONF_UPDATE_INTERVAL,
                     default=self.config_entry.options.get(
-                        CONF_UPDATE_TIME, DEFAULT_UPDATE_TIME
+                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
                     ),
-                ): str
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_UPDATE_INTERVAL,
+                        max=MAX_UPDATE_INTERVAL,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                )
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

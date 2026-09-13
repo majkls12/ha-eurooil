@@ -19,14 +19,11 @@
   "options": {
     "step": {
       "init": {
-        "title": "Nastavení aktualizace",
+        "title": "Interval aktualizace",
         "data": {
-          "update_time": "Čas denní aktualizace (HH:MM)"
+          "update_interval": "Aktualizovat po kolika hodinách"
         }
       }
-    },
-    "error": {
-      "invalid_time": "Zadejte čas ve formátu HH:MM, například 06:00."
     }
   }
 }

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -20,12 +20,18 @@ _LOGGER = logging.getLogger(__name__)
 class EuroOilCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetch one station's data only when requested by the configured schedule."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: EuroOilApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        api: EuroOilApi,
+        update_interval: timedelta,
+    ) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{entry.data[CONF_STATION_ID]}",
-            update_interval=None,
+            update_interval=update_interval,
         )
         self.entry = entry
         self.api = api

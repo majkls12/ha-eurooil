@@ -23,10 +23,11 @@ class EuroOilSensorDescription(SensorEntityDescription):
     """Describe a EuroOil value."""
 
     ean: str
-    value_kind: Literal["price", "bio", "delivery"]
+    value_kind: Literal["price", "bio", "delivery", "last_update"]
 
 
 SENSORS: tuple[EuroOilSensorDescription, ...] = (
+    EuroOilSensorDescription(key="last_update", name="Poslední aktualizace dat", icon="mdi:update", ean="", value_kind="last_update", device_class=SensorDeviceClass.TIMESTAMP),
     EuroOilSensorDescription(key="natural_95_price", name="Natural 95 cena", icon="mdi:gas-station", ean="4", value_kind="price", native_unit_of_measurement="Kč/l"),
     EuroOilSensorDescription(key="super_98_price", name="Super 98 cena", icon="mdi:gas-station", ean="5", value_kind="price", native_unit_of_measurement="Kč/l"),
     EuroOilSensorDescription(key="diesel_price", name="Diesel bez biosložky cena", icon="mdi:gas-station", ean="1", value_kind="price", native_unit_of_measurement="Kč/l"),
@@ -72,6 +73,8 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         """Only expose values for products sold by the selected station."""
         if not super().available or self.coordinator.data is None:
             return False
+        if self.entity_description.value_kind == "last_update":
+            return self.coordinator.last_update_success_time is not None
         source = "prices" if self.entity_description.value_kind == "price" else "quality"
         return self.entity_description.ean in self.coordinator.data[source]
 
@@ -82,6 +85,8 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
             return None
         ean = self.entity_description.ean
         kind = self.entity_description.value_kind
+        if kind == "last_update":
+            return self.coordinator.last_update_success_time
         if kind == "price":
             return self.coordinator.data["prices"][ean].get("prodejniCena")
         if kind == "delivery":
@@ -100,6 +105,8 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Expose the source timestamp for price and quality data."""
         if self.coordinator.data is None:
+            return None
+        if self.entity_description.value_kind == "last_update":
             return None
         if self.entity_description.value_kind == "price":
             item = self.coordinator.data["prices"].get(self.entity_description.ean)

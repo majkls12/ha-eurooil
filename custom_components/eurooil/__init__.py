@@ -2,31 +2,35 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_change
 
 from .api import EuroOilApi
-from .const import CONF_UPDATE_TIME, DEFAULT_UPDATE_TIME, DOMAIN
+from .const import (
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
+)
 from .coordinator import EuroOilCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-def _parse_update_time(value: str) -> tuple[int, int]:
-    """Parse a HH:MM option, falling back to the default."""
+def _get_update_interval(value: int | str | None) -> timedelta:
+    """Return a validated update interval in hours."""
     try:
-        time_value = datetime.strptime(value, "%H:%M")
-        return time_value.hour, time_value.minute
+        hours = int(value)
     except (TypeError, ValueError):
-        _LOGGER.warning("Invalid EuroOil update time %s; using %s", value, DEFAULT_UPDATE_TIME)
-        return 6, 0
+        hours = DEFAULT_UPDATE_INTERVAL
+    return timedelta(hours=max(MIN_UPDATE_INTERVAL, min(MAX_UPDATE_INTERVAL, hours)))
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -37,20 +41,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a configured EuroOil station."""
-    coordinator = EuroOilCoordinator(hass, entry, EuroOilApi(async_get_clientsession(hass)))
-    await coordinator.async_config_entry_first_refresh()
-
-    hour, minute = _parse_update_time(entry.options.get(CONF_UPDATE_TIME, DEFAULT_UPDATE_TIME))
-
-    @callback
-    def _scheduled_refresh(now: datetime) -> None:
-        """Ask the coordinator to refresh at the configured local time."""
-        hass.async_create_task(coordinator.async_request_refresh())
-
-    unsub_schedule = async_track_time_change(
-        hass, _scheduled_refresh, hour=hour, minute=minute, second=0
+    coordinator = EuroOilCoordinator(
+        hass,
+        entry,
+        EuroOilApi(async_get_clientsession(hass)),
+        _get_update_interval(entry.options.get(CONF_UPDATE_INTERVAL)),
     )
-    entry.async_on_unload(unsub_schedule)
+    await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
