@@ -42,12 +42,12 @@ FUEL_PRODUCTS: dict[str, Product] = {
 }
 
 QUALITY_ATTRIBUTES = {
-    "1-1": "hustota",
-    "1-2": "obsah_bioslozky",
-    "1-4": "bod_vzplanuti",
-    "4-1": "hustota",
-    "4-2": "obsah_biolihu",
-    "4-3": "konec_destilace",
+    "1-1": "Hustota (kg/m³)",
+    "1-2": "Obsah biosložky (%)",
+    "1-4": "Bod vzplanutí (°C)",
+    "4-1": "Hustota (kg/m³)",
+    "4-2": "Obsah biolihu (%)",
+    "4-3": "Konec destilace (°C)",
 }
 
 
@@ -80,8 +80,12 @@ def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]
         descriptions.append(
             EuroOilSensorDescription(
                 key=f"{product.key}_price",
-                name=f"{product.name} cena",
-                icon="mdi:gas-station",
+                name=product.name,
+                icon=(
+                    "mdi:gas-station-outline"
+                    if ean in {"1", "3", "9"}
+                    else "mdi:gas-station"
+                ),
                 ean=ean,
                 value_kind="price",
                 native_unit_of_measurement="Kč/l",
@@ -145,14 +149,14 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         if price is None:
             return None
         attributes: dict[str, Any] = {
-            "platnost_od": price.get("platnostOd"),
-            "platnost_do": price.get("platnostDo"),
-            "aktualizovano": price.get("aktualizovano"),
+            "Platnost od": price.get("platnostOd"),
+            "Platnost do": price.get("platnostDo"),
+            "Aktualizováno": price.get("aktualizovano"),
         }
         quality = self.coordinator.data["quality"].get(ean)
         if not quality:
             return attributes
-        attributes["posledni_zavoz"] = quality.get("datumZavozu")
+        attributes["Poslední závoz"] = quality.get("datumZavozu")
         for value in quality.get("hodnoty", []):
             attribute = QUALITY_ATTRIBUTES.get(value.get("kod"))
             if attribute:
