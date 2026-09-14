@@ -2,6 +2,8 @@
 
 Vlastní integrace pro veřejná data aplikace EuroOil Srdcovka. Vytvoří jedno zařízení pro každou zvolenou čerpací stanici a v nastaveném intervalu načte ceny i parametry kvality paliv.
 
+Vytvořeno Codexem ve spolupráci s Michalem.
+
 ## Instalace
 
 1. V HACS otevřete **Integrace → Vlastní repozitáře** a přidejte URL tohoto repozitáře jako typ **Integrace**.
