@@ -20,6 +20,6 @@ Pro ruční aktualizaci lze v automatizaci nebo skriptu použít akci `homeassis
 
 Pro každé palivo, které vybraná stanice aktuálně uvádí v ceníku, vzniká právě jedna entita s cenou. Podporovány jsou **Diesel**, **Diesel Plus**, **Natural 95**, **BA 98 Super+**, **BA 91 Special**, **Optimal BA95**, **LPG PB**, **AdBlue**, **CNG** a **HVO (XTL)**. Služby stanice (myčka, Wi-Fi, výdejní místa) a kapalina do ostřikovačů se nezobrazují.
 
-Podrobnosti jsou atributy cenové entity: `obsah_bioslozky`, `obsah_biolihu`, `hustota`, `bod_vzplanuti`, `konec_destilace`, `posledni_zavoz`, `platnost_od`, `platnost_do` a `aktualizovano`. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
+Podrobnosti jsou atributy cenové entity: **Obsah biosložky (%)**, **Obsah biolihu (%)**, **Hustota (kg/m³)**, **Bod vzplanutí (°C)**, **Konec destilace (°C)**, **Poslední závoz**, **Platnost od**, **Platnost do** a **Aktualizováno**. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
 
 Data poskytuje veřejné API Srdcovky společnosti ČEPRO. Při každé aktualizaci integrace používá jeden dotaz pro ceny celé sítě a jeden dotaz pro kvalitu vybrané stanice. Katalog názvů produktů se načte jednou při spuštění integrace.
