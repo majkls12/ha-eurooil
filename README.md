@@ -18,8 +18,8 @@ Pro ruční aktualizaci lze v automatizaci nebo skriptu použít akci `homeassis
 
 ## Entity
 
-Entity se vytvářejí podle paliv, která vybraná stanice skutečně prodává. U běžné stanice to jsou například **Diesel**, **Diesel Plus**, **Natural 95**, **BA 98 Super+**, **LPG PB** a **AdBlue**.
+Entity se vytvářejí podle paliv, která vybraná stanice skutečně prodává. Podporovány jsou **Diesel**, **Diesel Plus**, **Natural 95**, **BA 98 Super+**, **LPG PB**, **AdBlue**, **CNG** a **HVO (XTL)**. Neaktivní položky ceníku s nulovou cenou se nezobrazují.
 
-U naftových paliv jsou podle dat Srdcovky dostupné cena, obsah biosložky, hustota a bod vzplanutí. U benzínů cena, konec destilace, obsah biolihu a hustota. Pokud Srdcovka poskytne datum posledního závozu, zobrazí se i samostatná entita. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
+U naftových paliv jsou podle dat Srdcovky dostupné cena, obsah biosložky, hustota a bod vzplanutí. U benzínů cena, konec destilace, obsah biolihu a hustota. Pokud Srdcovka poskytne datum posledního závozu, zobrazí se i samostatná entita. U každé ceny jsou v atributech také údaje zdroje `platnost_od`, `platnost_do` a `aktualizovano`. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
 
 Data poskytuje veřejné API Srdcovky společnosti ČEPRO. Při každé aktualizaci integrace používá jeden dotaz pro ceny celé sítě a jeden dotaz pro kvalitu vybrané stanice.
