@@ -2,7 +2,7 @@
 
 Vlastní integrace pro veřejná data aplikace EuroOil Srdcovka. Vytvoří jedno zařízení pro každou zvolenou čerpací stanici a v nastaveném intervalu načte ceny i parametry kvality paliv.
 
-Vytvořeno Codexem ve spolupráci s Michalem.
+Vytvořeno Codexem ve spolupráci s MaJkl.
 
 ## Instalace
 
@@ -10,7 +10,7 @@ Vytvořeno Codexem ve spolupráci s Michalem.
 2. Nainstalujte **EuroOil / RoBiN OIL** a restartujte Home Assistant.
 3. V **Nastavení → Zařízení a služby → Přidat integraci** vyhledejte **EuroOil / RoBiN OIL**.
 4. Vyberte stanici. Další stanici přidáte stejným způsobem znovu.
-5. V možnostech integrace nastavte interval aktualizace v hodinách; výchozí je 12 hodin.
+5. V možnostech integrace nastavte interval aktualizace v hodinách; výchozí je 12 hodin (0 = pouze ruční aktualizace).
 
 ## Aktualizace dat
 
