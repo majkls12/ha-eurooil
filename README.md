@@ -1,6 +1,6 @@
 # EuroOil / RoBiN OIL pro Home Assistant
 
-Vlastní integrace pro veřejná data aplikace EuroOil Srdcovka. Vytvoří jedno zařízení pro každou zvolenou čerpací stanici a v nastaveném intervalu načte ceny, biosložku benzínu a datum posledního závozu.
+Vlastní integrace pro veřejná data aplikace EuroOil Srdcovka. Vytvoří jedno zařízení pro každou zvolenou čerpací stanici a v nastaveném intervalu načte ceny i parametry kvality paliv.
 
 ## Instalace
 
@@ -18,6 +18,8 @@ Pro ruční aktualizaci lze v automatizaci nebo skriptu použít akci `homeassis
 
 ## Entity
 
-Podle nabídky zvolené stanice jsou k dispozici ceny Natural 95, Super 98, nafty, nafty Plus a LPG. U benzínů jsou navíc senzory obsahu bioetanolu a u benzínu i naft datum posledního závozu. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
+Entity se vytvářejí podle paliv, která vybraná stanice skutečně prodává. U běžné stanice to jsou například **Diesel**, **Diesel Plus**, **Natural 95**, **BA 98 Super+**, **LPG PB** a **AdBlue**.
 
-Data poskytuje veřejné API Srdcovky společnosti ČEPRO. Integrace používá jeden dotaz pro ceny celé sítě a jeden dotaz pro kvalitu vybrané stanice při každé plánované aktualizaci.
+U naftových paliv jsou podle dat Srdcovky dostupné cena, obsah biosložky, hustota a bod vzplanutí. U benzínů cena, konec destilace, obsah biolihu a hustota. Pokud Srdcovka poskytne datum posledního závozu, zobrazí se i samostatná entita. Diagnostická entita ukazuje čas poslední úspěšné aktualizace všech dat integrace.
+
+Data poskytuje veřejné API Srdcovky společnosti ČEPRO. Při každé aktualizaci integrace používá jeden dotaz pro ceny celé sítě a jeden dotaz pro kvalitu vybrané stanice.
