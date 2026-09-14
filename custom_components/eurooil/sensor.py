@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import EuroOilCoordinator
@@ -19,32 +18,36 @@ from .coordinator import EuroOilCoordinator
 
 @dataclass(frozen=True, kw_only=True)
 class Product:
-    """Known product labels used by the Srdcovka application."""
+    """A supported fuel product."""
 
     key: str
     name: str
 
 
-# The API identifies fuels by EAN. Keep established keys for existing entities.
-KNOWN_PRODUCTS: dict[str, Product] = {
+# Friendly labels are based on the Srdcovka station catalogue. The catalogue is
+# also read at setup, so unknown non-fuel services (PPL, Wi-Fi, car wash …)
+# never become price sensors.
+FUEL_PRODUCTS: dict[str, Product] = {
     "1": Product(key="diesel", name="Diesel"),
-    "3": Product(key="diesel_plus", name="Diesel Plus"),
+    "3": Product(key="diesel_plus_3", name="Diesel Plus"),
     "4": Product(key="natural_95", name="Natural 95"),
     "5": Product(key="super_98", name="BA 98 Super+"),
+    "6": Product(key="ba_91_special", name="BA 91 Special"),
     "8": Product(key="lpg", name="LPG PB"),
+    "9": Product(key="diesel_plus", name="Diesel Plus"),
+    "11": Product(key="optimal_ba95", name="Optimal BA95"),
     "15": Product(key="cng", name="CNG"),
     "16": Product(key="adblue", name="AdBlue"),
     "204": Product(key="hvo_xtl", name="HVO (XTL)"),
 }
 
-QUALITY_VALUES: dict[str, tuple[str, str, str, str]] = {
-    # code: (key suffix, entity name, icon, unit)
-    "1-1": ("density", "Hustota", "mdi:weight-kilogram", "kg/m³"),
-    "1-2": ("bio", "Obsah biosložky", "mdi:leaf", "%"),
-    "1-4": ("flash_point", "Bod vzplanutí", "mdi:thermometer-alert", "°C"),
-    "4-1": ("density", "Hustota", "mdi:weight-kilogram", "kg/m³"),
-    "4-2": ("bioethanol", "Obsah biolihu", "mdi:leaf", "%"),
-    "4-3": ("distillation_end", "Konec destilace", "mdi:thermometer-lines", "°C"),
+QUALITY_ATTRIBUTES = {
+    "1-1": "hustota",
+    "1-2": "obsah_bioslozky",
+    "1-4": "bod_vzplanuti",
+    "4-1": "hustota",
+    "4-2": "obsah_biolihu",
+    "4-3": "konec_destilace",
 }
 
 
@@ -53,27 +56,11 @@ class EuroOilSensorDescription(SensorEntityDescription):
     """Describe a EuroOil value."""
 
     ean: str = ""
-    value_kind: Literal["price", "quality", "delivery", "last_update"]
-    quality_code: str | None = None
-
-
-def _product_for(ean: str, price: dict[str, Any]) -> Product:
-    """Return an application label, with a useful fallback for new products."""
-    if ean in KNOWN_PRODUCTS:
-        return KNOWN_PRODUCTS[ean]
-    name = next(
-        (
-            price.get(field)
-            for field in ("nazev", "nazevPaliva", "produkt", "productName")
-            if price.get(field)
-        ),
-        None,
-    )
-    return Product(key=f"product_ean_{ean}", name=str(name or f"Palivo EAN {ean}"))
+    value_kind: Literal["price", "last_update"]
 
 
 def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]:
-    """Build sensors from fuels actually sold by the selected station."""
+    """Create only one price sensor for every fuel sold by this station."""
     descriptions = [
         EuroOilSensorDescription(
             key="last_update",
@@ -83,12 +70,13 @@ def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]
             device_class=SensorDeviceClass.TIMESTAMP,
         )
     ]
-
-    for ean, price in sorted(data.get("prices", {}).items()):
-        # A zero price is an inactive catalogue item, not a fuel on the pump.
-        if not price.get("prodejniCena"):
+    for ean in sorted(
+        data.get("prices", {}),
+        key=lambda item: (not item.isdigit(), int(item) if item.isdigit() else item),
+    ):
+        product = FUEL_PRODUCTS.get(ean)
+        if product is None or ean not in data.get("product_names", {}):
             continue
-        product = _product_for(ean, price)
         descriptions.append(
             EuroOilSensorDescription(
                 key=f"{product.key}_price",
@@ -99,35 +87,6 @@ def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]
                 native_unit_of_measurement="Kč/l",
             )
         )
-        quality = data.get("quality", {}).get(ean)
-        if not quality:
-            continue
-        descriptions.append(
-            EuroOilSensorDescription(
-                key=f"{product.key}_delivery",
-                name=f"{product.name} poslední závoz",
-                icon="mdi:truck-delivery",
-                ean=ean,
-                value_kind="delivery",
-                device_class=SensorDeviceClass.TIMESTAMP,
-            )
-        )
-        for value in quality.get("hodnoty", []):
-            code = value.get("kod")
-            if code not in QUALITY_VALUES:
-                continue
-            suffix, label, icon, unit = QUALITY_VALUES[code]
-            descriptions.append(
-                EuroOilSensorDescription(
-                    key=f"{product.key}_{suffix}",
-                    name=f"{product.name} {label}",
-                    icon=icon,
-                    ean=ean,
-                    value_kind="quality",
-                    quality_code=code,
-                    native_unit_of_measurement=unit,
-                )
-            )
     return descriptions
 
 
@@ -145,7 +104,7 @@ async def async_setup_entry(
 
 
 class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
-    """Expose one public EuroOil station value."""
+    """Expose a public EuroOil station price."""
 
     entity_description: EuroOilSensorDescription
     _attr_has_entity_name = True
@@ -157,69 +116,45 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         self._attr_device_info = coordinator.device_info
         if description.value_kind == "price":
             self._attr_suggested_display_precision = 2
-        elif description.value_kind == "quality":
-            self._attr_suggested_display_precision = 1
 
     @property
     def available(self) -> bool:
-        """Expose only values supplied by the selected station."""
+        """Return whether the source has this value."""
         if not super().available or self.coordinator.data is None:
             return False
-        description = self.entity_description
-        if description.value_kind == "last_update":
+        if self.entity_description.value_kind == "last_update":
             return self.coordinator.data.get("last_update") is not None
-        if description.value_kind == "price":
-            return description.ean in self.coordinator.data["prices"]
-        if description.value_kind == "delivery":
-            return description.ean in self.coordinator.data["quality"]
-        return any(
-            item.get("kod") == description.quality_code
-            for item in self.coordinator.data["quality"].get(description.ean, {}).get("hodnoty", [])
-        )
+        return self.entity_description.ean in self.coordinator.data["prices"]
 
     @property
     def native_value(self) -> float | datetime | None:
-        """Return the normalized API value."""
+        """Return the sensor value."""
         if not self.available:
             return None
-        description = self.entity_description
-        if description.value_kind == "last_update":
+        if self.entity_description.value_kind == "last_update":
             return self.coordinator.data.get("last_update")
-        if description.value_kind == "price":
-            return self.coordinator.data["prices"][description.ean].get("prodejniCena")
-        if description.value_kind == "delivery":
-            return dt_util.parse_datetime(
-                self.coordinator.data["quality"][description.ean].get("datumZavozu")
-            )
-        return next(
-            (
-                item.get("hodnota")
-                for item in self.coordinator.data["quality"][description.ean].get("hodnoty", [])
-                if item.get("kod") == description.quality_code
-            ),
-            None,
-        )
+        return self.coordinator.data["prices"][self.entity_description.ean].get("prodejniCena")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Expose the source timestamp for price and quality data."""
-        if self.coordinator.data is None:
+        """Expose price validity and fuel-quality details as attributes."""
+        if self.coordinator.data is None or self.entity_description.value_kind != "price":
             return None
-        description = self.entity_description
-        if description.value_kind == "last_update":
+        ean = self.entity_description.ean
+        price = self.coordinator.data["prices"].get(ean)
+        if price is None:
             return None
-        if description.value_kind == "price":
-            item = self.coordinator.data["prices"].get(description.ean)
-            return (
-                {
-                    "platnost_od": item.get("platnostOd"),
-                    "platnost_do": item.get("platnostDo"),
-                    "aktualizovano": item.get("aktualizovano"),
-                }
-                if item
-                else None
-            )
-        if description.value_kind == "quality":
-            item = self.coordinator.data["quality"].get(description.ean)
-            return {"datum_zavozu": item.get("datumZavozu")} if item else None
-        return None
+        attributes: dict[str, Any] = {
+            "platnost_od": price.get("platnostOd"),
+            "platnost_do": price.get("platnostDo"),
+            "aktualizovano": price.get("aktualizovano"),
+        }
+        quality = self.coordinator.data["quality"].get(ean)
+        if not quality:
+            return attributes
+        attributes["posledni_zavoz"] = quality.get("datumZavozu")
+        for value in quality.get("hodnoty", []):
+            attribute = QUALITY_ATTRIBUTES.get(value.get("kod"))
+            if attribute:
+                attributes[attribute] = value.get("hodnota")
+        return attributes
