@@ -79,7 +79,7 @@ def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]
             continue
         descriptions.append(
             EuroOilSensorDescription(
-                key=f"{product.key}_price",
+                key=product.key,
                 name=product.name,
                 icon=(
                     "mdi:gas-station-outline"
