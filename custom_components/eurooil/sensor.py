@@ -28,11 +28,13 @@ class Product:
 # The API identifies fuels by EAN. Keep established keys for existing entities.
 KNOWN_PRODUCTS: dict[str, Product] = {
     "1": Product(key="diesel", name="Diesel"),
+    "3": Product(key="diesel_plus", name="Diesel Plus"),
     "4": Product(key="natural_95", name="Natural 95"),
     "5": Product(key="super_98", name="BA 98 Super+"),
     "8": Product(key="lpg", name="LPG PB"),
-    "9": Product(key="diesel_plus", name="Diesel Plus"),
-    "6": Product(key="adblue", name="AdBlue"),
+    "15": Product(key="cng", name="CNG"),
+    "16": Product(key="adblue", name="AdBlue"),
+    "204": Product(key="hvo_xtl", name="HVO (XTL)"),
 }
 
 QUALITY_VALUES: dict[str, tuple[str, str, str, str]] = {
@@ -83,6 +85,9 @@ def _sensor_descriptions(data: dict[str, Any]) -> list[EuroOilSensorDescription]
     ]
 
     for ean, price in sorted(data.get("prices", {}).items()):
+        # A zero price is an inactive catalogue item, not a fuel on the pump.
+        if not price.get("prodejniCena"):
+            continue
         product = _product_for(ean, price)
         descriptions.append(
             EuroOilSensorDescription(
@@ -205,7 +210,15 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
             return None
         if description.value_kind == "price":
             item = self.coordinator.data["prices"].get(description.ean)
-            return {"aktualizovano": item.get("aktualizovano")} if item else None
+            return (
+                {
+                    "platnost_od": item.get("platnostOd"),
+                    "platnost_do": item.get("platnostDo"),
+                    "aktualizovano": item.get("aktualizovano"),
+                }
+                if item
+                else None
+            )
         if description.value_kind == "quality":
             item = self.coordinator.data["quality"].get(description.ean)
             return {"datum_zavozu": item.get("datumZavozu")} if item else None
