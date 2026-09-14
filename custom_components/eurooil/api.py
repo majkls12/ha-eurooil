@@ -19,6 +19,7 @@ class EuroOilApi:
 
     def __init__(self, session: ClientSession) -> None:
         self._session = session
+        self._product_names: dict[str, str] | None = None
 
     async def _get(self, url: str) -> dict[str, Any]:
         try:
@@ -42,11 +43,35 @@ class EuroOilApi:
             None,
         )
 
+    async def async_get_product_names(self) -> dict[str, str]:
+        """Return EAN labels from the public station catalogue, cached per entry."""
+        if self._product_names is not None:
+            return self._product_names
+
+        names: dict[str, str] = {}
+
+        def visit(value: Any) -> None:
+            if isinstance(value, list):
+                for item in value:
+                    visit(item)
+            elif isinstance(value, dict):
+                ean = value.get("ean")
+                name = value.get("nazev")
+                if ean is not None and name:
+                    names[str(ean)] = str(name)
+                for item in value.values():
+                    visit(item)
+
+        visit(await self.async_get_stations())
+        self._product_names = names
+        return names
+
     async def async_get_station_data(self, station_id: int) -> dict[str, Any]:
         """Return current prices and quality information for a station."""
-        prices, quality = await asyncio.gather(
+        prices, quality, product_names = await asyncio.gather(
             self._get(PRICES_URL),
             self._get(f"{STATIONS_URL}/{station_id}/kvalita"),
+            self.async_get_product_names(),
         )
         return {
             "prices": {
@@ -59,4 +84,5 @@ class EuroOilApi:
                 for item in quality.get("data", [])
             },
             "quality_token": quality.get("token"),
+            "product_names": product_names,
         }
