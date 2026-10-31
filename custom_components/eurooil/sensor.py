@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal
 
-from homeassistant.components.sensor import (\n    SensorDeviceClass,\n    SensorEntity,\n    SensorEntityDescription,\n    SensorStateClass,\n)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -119,6 +124,7 @@ class EuroOilSensor(CoordinatorEntity[EuroOilCoordinator], SensorEntity):
         self._attr_unique_id = f"{coordinator.station_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
         if description.value_kind == "price":
+            self._attr_state_class = SensorStateClass.MEASUREMENT
             self._attr_suggested_display_precision = 2
 
     @property
